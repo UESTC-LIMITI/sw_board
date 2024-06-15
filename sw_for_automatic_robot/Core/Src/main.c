@@ -93,14 +93,23 @@ int main(void)
   MX_TIM3_Init();
   /* USER CODE BEGIN 2 */
   FDCAN_Init(&hfdcan1);
+  delay_us_init();
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    HAL_Delay(1);
+     HAL_Delay(1);
     intereaction_scan_sw();
+	  while(stop_count != 0 && stop_count <= 100 && switches.stop) {
+		intereaction_send_can_message(2);
+		delay_us(2);
+	  }
+	  while(start_count != 0 && switches.start && start_count <= 300) {
+		intereaction_send_can_message(1);
+		delay_us(2);
+	  }
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -152,41 +161,45 @@ void SystemClock_Config(void)
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
   if (GPIO_Pin == STOP_SW_Pin) {
-    if (switches.stop) {
-      HAL_TIM_Base_Start_IT(&htim3);
-      ack.chassis_config_ack = false;
-    } else if (switches.start) {
+    if (HAL_GPIO_ReadPin(STOP_SW_GPIO_Port, STOP_SW_Pin) == GPIO_PIN_SET) {
       HAL_TIM_Base_Start_IT(&htim2);
+      ack.chassis_config_ack = false;
+    } else if (HAL_GPIO_ReadPin(STOP_SW_GPIO_Port, STOP_SW_Pin) == GPIO_PIN_RESET) {
+      HAL_TIM_Base_Start_IT(&htim3);
     }
   }
 }
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
-  if(htim = &htim2) {
-    if (HAL_GPIO_ReadPin(STOP_SW_GPIO_Port, STOP_SW_Pin) == GPIO_PIN_SET) {
+  if(htim == &htim3) {
+    if (HAL_GPIO_ReadPin(STOP_SW_GPIO_Port, STOP_SW_Pin) == GPIO_PIN_RESET) {
       stop_count++;
       if (stop_count > 30) {
-        intereaction_send_can_message(2);
-      }
+//        intereaction_send_can_message(2);
+ 		switches.stop = true;
+		switches.start = false;
+     }
       if (stop_count >= 100) {
         stop_count = 0;
-        HAL_TIM_Base_Stop_IT(&htim2);
+        HAL_TIM_Base_Stop_IT(&htim3);
       }
     }
     else {
       stop_count = 0;
-      HAL_TIM_Base_Stop_IT(&htim2);
+      HAL_TIM_Base_Stop_IT(&htim3);
     }
   }
 
-  if(htim = &htim3) {
-    if (HAL_GPIO_ReadPin(STOP_SW_GPIO_Port, STOP_SW_Pin) == GPIO_PIN_RESET) {
+  if(htim == &htim2) {
+    if (HAL_GPIO_ReadPin(STOP_SW_GPIO_Port, STOP_SW_Pin) == GPIO_PIN_SET) {
       start_count++;
       if (start_count > 30) {
-        intereaction_send_can_message(1);
+		switches.stop = false;
+		switches.start = true;
+//        intereaction_send_can_message(1);
       }
-      if (start_count >= 100 || ack.chassis_config_ack) {
+      if (ack.chassis_config_ack || start_count >= 300) {
         start_count = 0;
         HAL_TIM_Base_Stop_IT(&htim2);
       }

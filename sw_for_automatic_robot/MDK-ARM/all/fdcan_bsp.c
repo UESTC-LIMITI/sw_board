@@ -75,7 +75,7 @@ uint8_t FDCAN_SendData(FDCAN_HandleTypeDef *hfdcan, uint8_t *TxData, uint32_t St
     TxHeader.Identifier = StdId;             /*32位 ID*/
     TxHeader.IdType = FDCAN_STANDARD_ID;     /*标准ID*/
     TxHeader.TxFrameType = FDCAN_DATA_FRAME; /*数据帧*/
-    TxHeader.DataLength = Length << 16;      /*数据长度有专门的格式  FDCAN_DLC_BYTES_8*/
+    TxHeader.DataLength = Length ;      /*数据长度有专门的格式  FDCAN_DLC_BYTES_8*/
     TxHeader.ErrorStateIndicator = FDCAN_ESI_ACTIVE;
     TxHeader.BitRateSwitch = FDCAN_BRS_OFF;           /*关闭速率切换*/
     TxHeader.FDFormat = FDCAN_CLASSIC_CAN;            /*传统的CAN模式*/

@@ -61,17 +61,17 @@ void intereaction_scan_sw(void) {
 		switches.in_blue = false;		
 	}
 	
-	//tim2 -> stop 
-	//tim3 -> start
-	if (stop_count >= 50) {
-		switches.stop = true;
-		switches.start = false;
+	//tim3 -> stop 
+	//tim2 -> start
+	if (stop_count >= 30) {
+//		switches.stop = true;
+//		switches.start = false;
 		// HAL_TIM_Base_Stop_IT(&htim2);
 		// stop_count = 0;
 	}
-	if (start_count >= 50) {
-		switches.stop = false;
-		switches.start = true;
+	if (start_count >= 30) {
+//		switches.stop = false;
+//		switches.start = true;
 		// HAL_TIM_Base_Stop_IT(&htim3);
 		// start_count = 0;
 	}
