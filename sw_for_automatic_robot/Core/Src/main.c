@@ -26,6 +26,7 @@
 /* USER CODE BEGIN Includes */
 #include "fdcan_bsp.h"
 #include "intereaction.h"
+#include "stdbool.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -57,7 +58,8 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
+bool vision_reset_1 = false;
+bool vision_reset_2 = false;
 /* USER CODE END 0 */
 
 /**
@@ -91,9 +93,11 @@ int main(void)
   MX_FDCAN1_Init();
   MX_TIM2_Init();
   MX_TIM3_Init();
+  MX_TIM6_Init();
   /* USER CODE BEGIN 2 */
   FDCAN_Init(&hfdcan1);
   delay_us_init();
+  HAL_TIM_Base_Start_IT(&htim6);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -109,6 +113,11 @@ int main(void)
 	  while(start_count != 0 && switches.start && start_count <= 300) {
 		intereaction_send_can_message(1);
 		delay_us(2);
+	  }
+	  if (vision_reset_1) {
+		HAL_Delay(50);
+		FDCAN_SendData(&hfdcan1, NULL, 0x021, 0);
+		  vision_reset_1 = false;
 	  }
     /* USER CODE END WHILE */
 
@@ -168,6 +177,10 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
       HAL_TIM_Base_Start_IT(&htim3);
     }
   }
+  if (GPIO_Pin == SW3_Pin) {
+//	FDCAN_SendData(&hfdcan1, NULL, 0x021, 0);
+	  vision_reset_1 = true;
+  }
 }
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
@@ -208,6 +221,18 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
       start_count = 0;
       HAL_TIM_Base_Stop_IT(&htim2);
     }
+  }
+  if(htim == &htim6) {
+	  uint8_t temp = 0x00;
+    if (switches.in_blue) {
+		temp = 0x01;
+		FDCAN_SendData(&hfdcan1, &temp, 0x005, 1);
+	}
+    else if (switches.in_red) {
+		temp = 0x02;
+		FDCAN_SendData(&hfdcan1, &temp, 0x005, 1);
+	}
+		
   }
 }
 
