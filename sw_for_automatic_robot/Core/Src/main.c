@@ -170,11 +170,13 @@ void SystemClock_Config(void)
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
   if (GPIO_Pin == STOP_SW_Pin) {
-    if (HAL_GPIO_ReadPin(STOP_SW_GPIO_Port, STOP_SW_Pin) == GPIO_PIN_SET) {
+    if (switches.stop) {
+		start_count = 0;
       HAL_TIM_Base_Start_IT(&htim2);
       ack.chassis_config_ack = false;
-    } else if (HAL_GPIO_ReadPin(STOP_SW_GPIO_Port, STOP_SW_Pin) == GPIO_PIN_RESET) {
+    } else if (switches.start) {
       HAL_TIM_Base_Start_IT(&htim3);
+		stop_count = 0;
     }
   }
   if (GPIO_Pin == SW3_Pin) {
@@ -186,7 +188,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
   if(htim == &htim3) {
-    if (HAL_GPIO_ReadPin(STOP_SW_GPIO_Port, STOP_SW_Pin) == GPIO_PIN_RESET) {
+    if (HAL_GPIO_ReadPin(STOP_SW_GPIO_Port, STOP_SW_Pin) == GPIO_PIN_SET) {
       stop_count++;
       if (stop_count > 30) {
 //        intereaction_send_can_message(2);

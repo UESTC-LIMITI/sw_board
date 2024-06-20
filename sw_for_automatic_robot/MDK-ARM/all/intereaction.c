@@ -17,8 +17,8 @@ switches_t switches = {
 	false,
 	false,
 	false,
-	true,
 	false,
+	true,
 	};
 uint32_t stop_count = 0;
 uint32_t start_count = 0;
